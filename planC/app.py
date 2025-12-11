@@ -69,6 +69,10 @@ def upload_pdf():
     # 簡單的切塊邏輯：以「頁」為單位 (實務上通常會每 500 字切一段)
     for i, page in enumerate(pdf.pages):
         text = page.extract_text()
+        # 👇 新增這兩行 Debug 用 (看終端機印出什麼)
+        print(f"--- 正在讀取第 {i+1} 頁 ---")
+        print(text[:200])  # 只印前 200 字檢查
+        print("-----------------------")
         if text:
             # 加上頁碼標記，方便之後引用
             chunk_data = {
@@ -105,9 +109,9 @@ def ask_rag():
     # 1. 把使用者的問題變成向量
     query_vector = get_query_embedding(user_question)
 
-    # 2. 去 ChromaDB 搜尋「最像」的 3 個段落
+    # 2. 去 ChromaDB 搜尋「最像」的 5 個段落
     results = collection.query(
-        query_embeddings=[query_vector], n_results=3  # 找前 3 名
+        query_embeddings=[query_vector], n_results=5  # 找前 5 名
     )
 
     # 取出找到的文字與來源
@@ -132,7 +136,7 @@ def ask_rag():
     """
 
     # 4. 呼叫 Gemini 回答
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash-lite")
     response = model.generate_content(prompt)
 
     return jsonify({"answer": response.text, "sources": retrieved_sources})

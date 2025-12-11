@@ -32,5 +32,5 @@ python app.py
 ![alt text](image.png)
 # planB - AI 單據辨識
 ![alt text](image2.png)
-# planC - AI 單據辨識
-![alt text](image-1.png)
+# planC - AI 知識庫管理
+![alt text](image-2.png)
