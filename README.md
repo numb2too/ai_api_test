@@ -34,3 +34,5 @@ python app.py
 ![alt text](image2.png)
 # planC - AI 知識庫管理
 ![alt text](image-2.png)
+# planD - AI 會議記錄小幫手
+![alt text](image-1.png)
