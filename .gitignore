@@ -1,4 +1,14 @@
-.env
-venv/
+# Mac 系統檔
+.DS_Store
+
+# Python 編譯檔 (這個也不要傳)
 __pycache__/
+*.pyc
+
+# 虛擬環境 (這個絕對不要傳，檔案超多且沒意義)
+venv/
+.env
+
+# 資料庫 (如果是測試用的通常也不傳)
 *.db
+factory_knowledge_db/
