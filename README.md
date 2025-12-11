@@ -36,3 +36,5 @@ python app.py
 ![alt text](image-2.png)
 # planD - AI 會議記錄小幫手
 ![alt text](image-1.png)
+# planE - AI 會議記錄小幫手錄音檔
+![alt text](image-3.png)
