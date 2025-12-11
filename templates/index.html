@@ -3,55 +3,223 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>工廠數據 AI 助手</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工廠戰情室 AI 助手</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* 自定義捲軸樣式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100 h-screen flex items-center justify-center">
+<body class="bg-slate-100 min-h-screen py-10 px-4">
 
     {% raw %}
-    <div id="app" class="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl">
-        <h1 class="text-2xl font-bold mb-4 text-blue-600">工廠數據 AI 查詢助手</h1>
+    <div id="app" class="max-w-4xl mx-auto space-y-6">
 
-        <div class="mb-4">
-            <label class="block text-gray-700 text-sm font-bold mb-2">請問你想查什麼？</label>
-            <div class="flex gap-2">
-                <input v-model="question" @keyup.enter="askAI" type="text"
-                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                    placeholder="例如：列出大甲廠產量低於標準的批號">
-
-                <button @click="askAI" :disabled="loading"
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    {{ loading ? '查詢中...' : '送出' }}
-                </button>
-            </div>
+        <div class="text-center space-y-2">
+            <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight flex items-center justify-center gap-2">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                    </path>
+                </svg>
+                工廠數據戰情室
+            </h1>
+            <p class="text-slate-500 text-sm">Text-to-SQL 自然語言查詢助手 (Demo)</p>
         </div>
 
-        <div v-if="result" class="mt-6 space-y-4">
-            <div class="bg-green-50 p-4 rounded border border-green-200">
-                <h3 class="font-bold text-green-800">AI 總結：</h3>
-                <p class="text-gray-700">{{ result.summary }}</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <div class="md:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-fit">
+
+                <div class="md:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-fit">
+                    <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                        <h3 class="font-semibold text-slate-700 text-sm">📂 資料庫預覽 (Mock Data)</h3>
+                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">SQLite</span>
+                    </div>
+                    <div class="p-0 overflow-x-auto">
+                        <table class="w-full text-xs text-left">
+                            <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
+                                <tr>
+                                    <th class="px-3 py-2 whitespace-nowrap">日期</th>
+                                    <th class="px-3 py-2 whitespace-nowrap">廠區/批號</th>
+                                    <th class="px-3 py-2 text-right">產量</th>
+                                    <th class="px-3 py-2 text-right text-slate-400">標準</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-slate-600">
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="px-3 py-2 whitespace-nowrap">10-01</td>
+                                    <td class="px-3 py-2">
+                                        <div class="font-medium text-slate-700">大甲廠</div>
+                                        <div class="text-[10px] text-slate-400">DJ-001</div>
+                                    </td>
+                                    <td class="px-3 py-2 text-right font-bold text-red-500">950</td>
+                                    <td class="px-3 py-2 text-right text-slate-400">1000</td>
+                                </tr>
+
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="px-3 py-2 whitespace-nowrap">10-02</td>
+                                    <td class="px-3 py-2">
+                                        <div class="font-medium text-slate-700">大甲廠</div>
+                                        <div class="text-[10px] text-slate-400">DJ-002</div>
+                                    </td>
+                                    <td class="px-3 py-2 text-right font-bold text-emerald-600">1050</td>
+                                    <td class="px-3 py-2 text-right text-slate-400">1000</td>
+                                </tr>
+
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="px-3 py-2 whitespace-nowrap">10-03</td>
+                                    <td class="px-3 py-2">
+                                        <div class="font-medium text-slate-700">大甲廠</div>
+                                        <div class="text-[10px] text-slate-400">DJ-003</div>
+                                    </td>
+                                    <td class="px-3 py-2 text-right font-bold text-emerald-600">1020</td>
+                                    <td class="px-3 py-2 text-right text-slate-400">1000</td>
+                                </tr>
+
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="px-3 py-2 whitespace-nowrap">10-05</td>
+                                    <td class="px-3 py-2">
+                                        <div class="font-medium text-slate-700">大甲廠</div>
+                                        <div class="text-[10px] text-slate-400">DJ-004</div>
+                                    </td>
+                                    <td class="px-3 py-2 text-right font-bold text-red-500">880</td>
+                                    <td class="px-3 py-2 text-right text-slate-400">1000</td>
+                                </tr>
+
+                                <tr class="hover:bg-slate-50 transition bg-blue-50/30">
+                                    <td class="px-3 py-2 whitespace-nowrap">10-05</td>
+                                    <td class="px-3 py-2">
+                                        <div class="font-medium text-blue-700">二林廠</div>
+                                        <div class="text-[10px] text-blue-400">EL-001</div>
+                                    </td>
+                                    <td class="px-3 py-2 text-right font-bold text-emerald-600">1100</td>
+                                    <td class="px-3 py-2 text-right text-slate-400">1000</td>
+                                </tr>
+
+                                <tr class="hover:bg-slate-50 transition">
+                                    <td class="px-3 py-2 whitespace-nowrap">10-10</td>
+                                    <td class="px-3 py-2">
+                                        <div class="font-medium text-slate-700">大甲廠</div>
+                                        <div class="text-[10px] text-slate-400">DJ-005</div>
+                                    </td>
+                                    <td class="px-3 py-2 text-right font-bold text-red-500">900</td>
+                                    <td class="px-3 py-2 text-right text-slate-400">1000</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="p-3 bg-slate-50 text-xs text-slate-500 border-t border-slate-200">
+                    標準產量 (Standard): 1000
+                </div>
             </div>
 
-            <div class="bg-gray-800 p-4 rounded text-xs text-green-400 font-mono overflow-x-auto">
-                <p class="text-gray-400 mb-1"># Generated SQL:</p>
-                {{ result.sql }}
-            </div>
+            <div class="md:col-span-2 space-y-6">
 
-            <div v-if="result.data && result.data.length > 0">
-                <table class="min-w-full text-sm text-left text-gray-500">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                        <tr>
-                            <th v-for="(value, key) in result.data[0]" :key="key" class="px-6 py-3">{{ key }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(row, index) in result.data" :key="index" class="bg-white border-b">
-                            <td v-for="(value, key) in row" :key="key" class="px-6 py-4">{{ value }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div class="bg-white rounded-xl shadow-lg border border-blue-100 p-6 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+
+                    <label class="block text-slate-700 text-sm font-bold mb-3">請問你想查什麼？</label>
+
+                    <div class="flex gap-2 mb-4">
+                        <input v-model="question" @keyup.enter="askAI" type="text"
+                            class="flex-1 shadow-sm appearance-none border border-slate-300 rounded-lg w-full py-3 px-4 text-slate-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            placeholder="輸入問題，例如：查詢產量異常...">
+
+                        <button @click="askAI" :disabled="loading"
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                            <span v-if="loading"
+                                class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
+                            <span>{{ loading ? '分析中' : '查詢' }}</span>
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-xs text-slate-400 self-center">試試看：</span>
+                        <button v-for="q in sampleQueries" @click="setQuestion(q)"
+                            class="text-xs bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-200 px-3 py-1.5 rounded-full transition cursor-pointer">
+                            {{ q }}
+                        </button>
+                    </div>
+                </div>
+
+                <div v-if="result" class="space-y-4 animate-fade-in-up">
+
+                    <div
+                        class="bg-gradient-to-r from-emerald-50 to-white p-5 rounded-xl border border-emerald-100 shadow-sm flex gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-xl">
+                                🤖</div>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-emerald-800 text-sm mb-1">AI 戰情分析</h3>
+                            <p class="text-slate-700 leading-relaxed">{{ result.summary }}</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <div class="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">查詢結果明細</h4>
+                            <span class="text-xs text-slate-400">Generated by Gemini 1.5</span>
+                        </div>
+
+                        <div v-if="result.data && result.data.length > 0" class="overflow-x-auto">
+                            <table class="min-w-full text-sm text-left text-slate-500">
+                                <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th v-for="(value, key) in result.data[0]" :key="key"
+                                            class="px-6 py-3 font-semibold">{{ key }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr v-for="(row, index) in result.data" :key="index"
+                                        class="bg-white hover:bg-slate-50 transition">
+                                        <td v-for="(value, key) in row" :key="key" class="px-6 py-4 whitespace-nowrap">
+                                            {{ value }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div v-else class="p-8 text-center text-slate-400">
+                            查無符合條件的數據
+                        </div>
+
+                        <div class="bg-slate-900 p-4 border-t border-slate-200">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs text-slate-400 font-mono">SQL Query</span>
+                            </div>
+                            <code class="block font-mono text-xs text-green-400 break-all">
+                                > {{ result.sql }}
+                            </code>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -63,24 +231,43 @@
         createApp({
             data() {
                 return {
-                    question: '列出大甲廠產量低於標準的批號', // 預設問題方便 Demo
+                    question: '列出大甲廠產量低於標準的批號',
                     loading: false,
-                    result: null
+                    result: null,
+                    // 預設問題列表，方便 Demo
+                    sampleQueries: [
+                        "列出大甲廠產量低於標準的批號",
+                        "二林廠的總產量是多少？",
+                        "哪一天的產量最高？",
+                        "列出所有工廠的生產清單"
+                    ]
                 }
             },
             methods: {
+                // 點擊快速按鈕時，自動填入問題
+                setQuestion(q) {
+                    this.question = q;
+                    // 可選：點擊後是否直接送出？如果想更順，可以把下面這行註解打開
+                    // this.askAI(); 
+                },
                 async askAI() {
+                    if (!this.question) return;
                     this.loading = true;
                     this.result = null;
                     try {
                         const res = await fetch('/ask', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
+                            // 注意：這裡假設後端還是只收 question，如果你有加 model/api_key，記得補上
                             body: JSON.stringify({ question: this.question })
                         });
-                        this.result = await res.json();
+                        const data = await res.json();
+
+                        if (!res.ok) throw new Error(data.error || '請求失敗');
+
+                        this.result = data;
                     } catch (error) {
-                        alert('發生錯誤');
+                        alert('發生錯誤: ' + error.message);
                     } finally {
                         this.loading = false;
                     }
