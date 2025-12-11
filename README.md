@@ -27,3 +27,8 @@ python init_db.py
 # 執行 app.py 即可運行
 python app.py
 ```
+
+# planA - 工廠數據戰情室 
+![alt text](image.png)
+# planB - AI 單據辨識
+![alt text](image2.png)
