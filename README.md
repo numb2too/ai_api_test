@@ -27,3 +27,5 @@ python init_db.py
 # 執行 app.py 即可運行
 python app.py
 ```
+
+![alt text](image.png)
