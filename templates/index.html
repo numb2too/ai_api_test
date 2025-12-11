@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <title>工廠數據 AI 助手</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 h-screen flex items-center justify-center">
+
+    {% raw %}
+    <div id="app" class="bg-white p-8 rounded-lg shadow-lg w-full max-w-2xl">
+        <h1 class="text-2xl font-bold mb-4 text-blue-600">工廠數據 AI 查詢助手</h1>
+
+        <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2">請問你想查什麼？</label>
+            <div class="flex gap-2">
+                <input v-model="question" @keyup.enter="askAI" type="text"
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    placeholder="例如：列出大甲廠產量低於標準的批號">
+
+                <button @click="askAI" :disabled="loading"
+                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    {{ loading ? '查詢中...' : '送出' }}
+                </button>
+            </div>
+        </div>
+
+        <div v-if="result" class="mt-6 space-y-4">
+            <div class="bg-green-50 p-4 rounded border border-green-200">
+                <h3 class="font-bold text-green-800">AI 總結：</h3>
+                <p class="text-gray-700">{{ result.summary }}</p>
+            </div>
+
+            <div class="bg-gray-800 p-4 rounded text-xs text-green-400 font-mono overflow-x-auto">
+                <p class="text-gray-400 mb-1"># Generated SQL:</p>
+                {{ result.sql }}
+            </div>
+
+            <div v-if="result.data && result.data.length > 0">
+                <table class="min-w-full text-sm text-left text-gray-500">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th v-for="(value, key) in result.data[0]" :key="key" class="px-6 py-3">{{ key }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(row, index) in result.data" :key="index" class="bg-white border-b">
+                            <td v-for="(value, key) in row" :key="key" class="px-6 py-4">{{ value }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endraw %}
+
+    <script>
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {
+                    question: '列出大甲廠產量低於標準的批號', // 預設問題方便 Demo
+                    loading: false,
+                    result: null
+                }
+            },
+            methods: {
+                async askAI() {
+                    this.loading = true;
+                    this.result = null;
+                    try {
+                        const res = await fetch('/ask', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ question: this.question })
+                        });
+                        this.result = await res.json();
+                    } catch (error) {
+                        alert('發生錯誤');
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>
