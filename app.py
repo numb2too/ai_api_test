@@ -1,27 +1,28 @@
 import sqlite3
 import os
-from flask import Flask, request, jsonify, render_template
-import google.generativeai as genai  # 1. 改用 Google 的套件
-import os  # 新增
-from dotenv import load_dotenv  # 新增
+import json
+import time
+from flask import Flask, request, Response, render_template, stream_with_context
+import google.generativeai as genai
+from dotenv import load_dotenv
 
-# 1. 載入 .env 檔案中的變數
 load_dotenv()
 app = Flask(__name__)
 
+# 讀取 Key
 api_key = os.getenv("GOOGLE_API_KEY")
 if not api_key:
-    raise ValueError("找不到 API Key！請確認你有建立 .env 檔案並設定 GOOGLE_API_KEY")
-# 2. 設定 API Key
-# 記得去 Google AI Studio 申請 Key
-genai.configure(api_key=api_key)
+    # 如果沒 .env，預設給一個空值或報錯，視你的需求而定
+    print("警告: 未偵測到 .env，請確保有設定 API Key")
 
-# 初始化模型，推薦使用 gemini-1.5-flash (速度快、免費額度高) 或 gemini-1.5-pro (更聰明)
+if api_key:
+    genai.configure(api_key=api_key)
+
+# 使用 1.5-flash
 model = genai.GenerativeModel("gemini-2.5-flash")
 
 
 def query_db(query):
-    """(這段完全不用改) 執行 SQL 並回傳結果"""
     conn = sqlite3.connect("factory.db")
     cursor = conn.cursor()
     try:
@@ -36,53 +37,19 @@ def query_db(query):
 
 
 def get_sql_from_llm(user_question):
-    """
-    改寫：使用 Gemini 產生 SQL
-    """
     table_schema = """
     Table: production_logs
     Columns: date (Text), factory (Text), batch_no (Text), output (Int), standard (Int)
     """
-
-    # Gemini 的 Prompt 寫法
     prompt = f"""
     You are a SQL expert converting natural language to SQL for SQLite.
-    
-    Schema:
-    {table_schema}
-    
+    Schema: {table_schema}
     Rules:
-    1. Convert this question: "{user_question}"
-    2. Return ONLY the raw SQL query. 
-    3. Do NOT use Markdown formatting (no ```sql ... ```). 
-    4. Do NOT add explanations.
+    1. Convert: "{user_question}"
+    2. Return ONLY raw SQL. No Markdown.
     """
-
-    # 呼叫 Gemini
     response = model.generate_content(prompt)
-
-    # 清理結果 (Gemini有時候很雞婆會加 Markdown 符號，我們手動清掉以防萬一)
-    sql_query = response.text.strip().replace("```sql", "").replace("```", "")
-    return sql_query
-
-
-def summarize_results(user_question, data):
-    """
-    改寫：使用 Gemini 總結數據
-    """
-    prompt = f"""
-    User Question: {user_question}
-    Data Retrieved: {str(data)}
-    
-    Task: Summarize this data in Traditional Chinese (繁體中文) for a factory manager. 
-    Keep it concise (within 50 words).
-    """
-
-    response = model.generate_content(prompt)
-    return response.text
-
-
-# --- 以下路由 (Routes) 完全不用改 ---
+    return response.text.strip().replace("```sql", "").replace("```", "")
 
 
 @app.route("/")
@@ -92,22 +59,48 @@ def index():
 
 @app.route("/ask", methods=["POST"])
 def ask():
-    user_question = request.json.get("question")
+    data = request.json
+    user_question = data.get("question")
 
-    # 1. 翻譯成 SQL
-    generated_sql = get_sql_from_llm(user_question)
-    print(f"Gemini Generated SQL: {generated_sql}")
+    def generate():
+        try:
+            # 1. 產生 SQL
+            generated_sql = get_sql_from_llm(user_question)
 
-    # 2. 執行 SQL (安全檢查)
-    if "DROP" in generated_sql.upper() or "DELETE" in generated_sql.upper():
-        return jsonify({"error": "為了 Demo 安全，禁止刪除操作！"})
+            if "DROP" in generated_sql.upper() or "DELETE" in generated_sql.upper():
+                yield f"data: {json.dumps({'type': 'error', 'content': '禁止刪除操作'})}\n\n"
+                return
 
-    data = query_db(generated_sql)
+            # 2. 查 DB
+            db_data = query_db(generated_sql)
 
-    # 3. 總結結果
-    summary = summarize_results(user_question, data)
+            # 3. 先把表格資料推給前端
+            init_payload = json.dumps(
+                {"type": "init", "sql": generated_sql, "data": db_data},
+                ensure_ascii=False,
+            )
+            yield f"data: {init_payload}\n\n"
 
-    return jsonify({"sql": generated_sql, "data": data, "summary": summary})
+            # 4. 開始 AI 總結 (Stream)
+            prompt = f"""
+            User Question: {user_question}
+            Data Retrieved: {str(db_data)}
+            Task: Summarize this data in Traditional Chinese (繁體中文). Concise.
+            """
+
+            response = model.generate_content(prompt, stream=True)
+
+            for chunk in response:
+                if chunk.text:
+                    chunk_payload = json.dumps(
+                        {"type": "chunk", "content": chunk.text}, ensure_ascii=False
+                    )
+                    yield f"data: {chunk_payload}\n\n"
+
+        except Exception as e:
+            yield f"data: {json.dumps({'type': 'error', 'content': str(e)})}\n\n"
+
+    return Response(stream_with_context(generate()), mimetype="text/event-stream")
 
 
 if __name__ == "__main__":
