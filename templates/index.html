@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>工廠戰情室 AI 助手</title>
+    <title>工廠戰情室 AI 助手 (SSE Smooth)</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -13,7 +13,6 @@
             font-family: 'Inter', sans-serif;
         }
 
-        /* 自定義捲軸樣式 */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -28,8 +27,25 @@
             border-radius: 4px;
         }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+        /* 游標閃爍動畫 */
+        .typing-cursor::after {
+            content: '▋';
+            margin-left: 2px;
+            animation: blink 1s step-start infinite;
+            color: #10b981;
+            font-size: 0.8em;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0;
+            }
         }
     </style>
 </head>
@@ -48,91 +64,88 @@
                 </svg>
                 工廠數據戰情室
             </h1>
-            <p class="text-slate-500 text-sm">Text-to-SQL 自然語言查詢助手 (Demo)</p>
+            <p class="text-slate-500 text-sm">Real-time Streaming Text-to-SQL Assistant</p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
             <div class="md:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-fit">
+                <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                    <h3 class="font-semibold text-slate-700 text-sm">📂 資料庫預覽 (Mock Data)</h3>
+                    <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">SQLite</span>
+                </div>
+                <div class="p-0 overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
+                            <tr>
+                                <th class="px-3 py-2 whitespace-nowrap">日期</th>
+                                <th class="px-3 py-2 whitespace-nowrap">廠區/批號</th>
+                                <th class="px-3 py-2 text-right">產量</th>
+                                <th class="px-3 py-2 text-right text-slate-400">標準</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-600">
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-3 py-2 whitespace-nowrap">10-01</td>
+                                <td class="px-3 py-2">
+                                    <div class="font-medium text-slate-700">大甲廠</div>
+                                    <div class="text-[10px] text-slate-400">DJ-001</div>
+                                </td>
+                                <td class="px-3 py-2 text-right font-bold text-red-500">950</td>
+                                <td class="px-3 py-2 text-right text-slate-400">1000</td>
+                            </tr>
 
-                <div class="md:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-fit">
-                    <div class="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
-                        <h3 class="font-semibold text-slate-700 text-sm">📂 資料庫預覽 (Mock Data)</h3>
-                        <span class="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">SQLite</span>
-                    </div>
-                    <div class="p-0 overflow-x-auto">
-                        <table class="w-full text-xs text-left">
-                            <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
-                                <tr>
-                                    <th class="px-3 py-2 whitespace-nowrap">日期</th>
-                                    <th class="px-3 py-2 whitespace-nowrap">廠區/批號</th>
-                                    <th class="px-3 py-2 text-right">產量</th>
-                                    <th class="px-3 py-2 text-right text-slate-400">標準</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 text-slate-600">
-                                <tr class="hover:bg-slate-50 transition">
-                                    <td class="px-3 py-2 whitespace-nowrap">10-01</td>
-                                    <td class="px-3 py-2">
-                                        <div class="font-medium text-slate-700">大甲廠</div>
-                                        <div class="text-[10px] text-slate-400">DJ-001</div>
-                                    </td>
-                                    <td class="px-3 py-2 text-right font-bold text-red-500">950</td>
-                                    <td class="px-3 py-2 text-right text-slate-400">1000</td>
-                                </tr>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-3 py-2 whitespace-nowrap">10-02</td>
+                                <td class="px-3 py-2">
+                                    <div class="font-medium text-slate-700">大甲廠</div>
+                                    <div class="text-[10px] text-slate-400">DJ-002</div>
+                                </td>
+                                <td class="px-3 py-2 text-right font-bold text-emerald-600">1050</td>
+                                <td class="px-3 py-2 text-right text-slate-400">1000</td>
+                            </tr>
 
-                                <tr class="hover:bg-slate-50 transition">
-                                    <td class="px-3 py-2 whitespace-nowrap">10-02</td>
-                                    <td class="px-3 py-2">
-                                        <div class="font-medium text-slate-700">大甲廠</div>
-                                        <div class="text-[10px] text-slate-400">DJ-002</div>
-                                    </td>
-                                    <td class="px-3 py-2 text-right font-bold text-emerald-600">1050</td>
-                                    <td class="px-3 py-2 text-right text-slate-400">1000</td>
-                                </tr>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-3 py-2 whitespace-nowrap">10-03</td>
+                                <td class="px-3 py-2">
+                                    <div class="font-medium text-slate-700">大甲廠</div>
+                                    <div class="text-[10px] text-slate-400">DJ-003</div>
+                                </td>
+                                <td class="px-3 py-2 text-right font-bold text-emerald-600">1020</td>
+                                <td class="px-3 py-2 text-right text-slate-400">1000</td>
+                            </tr>
 
-                                <tr class="hover:bg-slate-50 transition">
-                                    <td class="px-3 py-2 whitespace-nowrap">10-03</td>
-                                    <td class="px-3 py-2">
-                                        <div class="font-medium text-slate-700">大甲廠</div>
-                                        <div class="text-[10px] text-slate-400">DJ-003</div>
-                                    </td>
-                                    <td class="px-3 py-2 text-right font-bold text-emerald-600">1020</td>
-                                    <td class="px-3 py-2 text-right text-slate-400">1000</td>
-                                </tr>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-3 py-2 whitespace-nowrap">10-05</td>
+                                <td class="px-3 py-2">
+                                    <div class="font-medium text-slate-700">大甲廠</div>
+                                    <div class="text-[10px] text-slate-400">DJ-004</div>
+                                </td>
+                                <td class="px-3 py-2 text-right font-bold text-red-500">880</td>
+                                <td class="px-3 py-2 text-right text-slate-400">1000</td>
+                            </tr>
 
-                                <tr class="hover:bg-slate-50 transition">
-                                    <td class="px-3 py-2 whitespace-nowrap">10-05</td>
-                                    <td class="px-3 py-2">
-                                        <div class="font-medium text-slate-700">大甲廠</div>
-                                        <div class="text-[10px] text-slate-400">DJ-004</div>
-                                    </td>
-                                    <td class="px-3 py-2 text-right font-bold text-red-500">880</td>
-                                    <td class="px-3 py-2 text-right text-slate-400">1000</td>
-                                </tr>
+                            <tr class="hover:bg-slate-50 transition bg-blue-50/30">
+                                <td class="px-3 py-2 whitespace-nowrap">10-05</td>
+                                <td class="px-3 py-2">
+                                    <div class="font-medium text-blue-700">二林廠</div>
+                                    <div class="text-[10px] text-blue-400">EL-001</div>
+                                </td>
+                                <td class="px-3 py-2 text-right font-bold text-emerald-600">1100</td>
+                                <td class="px-3 py-2 text-right text-slate-400">1000</td>
+                            </tr>
 
-                                <tr class="hover:bg-slate-50 transition bg-blue-50/30">
-                                    <td class="px-3 py-2 whitespace-nowrap">10-05</td>
-                                    <td class="px-3 py-2">
-                                        <div class="font-medium text-blue-700">二林廠</div>
-                                        <div class="text-[10px] text-blue-400">EL-001</div>
-                                    </td>
-                                    <td class="px-3 py-2 text-right font-bold text-emerald-600">1100</td>
-                                    <td class="px-3 py-2 text-right text-slate-400">1000</td>
-                                </tr>
-
-                                <tr class="hover:bg-slate-50 transition">
-                                    <td class="px-3 py-2 whitespace-nowrap">10-10</td>
-                                    <td class="px-3 py-2">
-                                        <div class="font-medium text-slate-700">大甲廠</div>
-                                        <div class="text-[10px] text-slate-400">DJ-005</div>
-                                    </td>
-                                    <td class="px-3 py-2 text-right font-bold text-red-500">900</td>
-                                    <td class="px-3 py-2 text-right text-slate-400">1000</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="px-3 py-2 whitespace-nowrap">10-10</td>
+                                <td class="px-3 py-2">
+                                    <div class="font-medium text-slate-700">大甲廠</div>
+                                    <div class="text-[10px] text-slate-400">DJ-005</div>
+                                </td>
+                                <td class="px-3 py-2 text-right font-bold text-red-500">900</td>
+                                <td class="px-3 py-2 text-right text-slate-400">1000</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
                 <div class="p-3 bg-slate-50 text-xs text-slate-500 border-t border-slate-200">
                     標準產量 (Standard): 1000
@@ -148,14 +161,14 @@
 
                     <div class="flex gap-2 mb-4">
                         <input v-model="question" @keyup.enter="askAI" type="text"
-                            class="flex-1 shadow-sm appearance-none border border-slate-300 rounded-lg w-full py-3 px-4 text-slate-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            class="flex-1 shadow-sm appearance-none border border-slate-300 rounded-lg w-full py-3 px-4 text-slate-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                             placeholder="輸入問題，例如：查詢產量異常...">
 
                         <button @click="askAI" :disabled="loading"
-                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                            class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition disabled:opacity-50 flex items-center gap-2">
                             <span v-if="loading"
                                 class="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></span>
-                            <span>{{ loading ? '分析中' : '查詢' }}</span>
+                            <span>{{ loading ? '...' : '分析' }}</span>
                         </button>
                     </div>
 
@@ -168,7 +181,7 @@
                     </div>
                 </div>
 
-                <div v-if="result" class="space-y-4 animate-fade-in-up">
+                <div v-if="hasResult" class="space-y-4 animate-fade-in-up">
 
                     <div
                         class="bg-gradient-to-r from-emerald-50 to-white p-5 rounded-xl border border-emerald-100 shadow-sm flex gap-4">
@@ -176,28 +189,30 @@
                             <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-xl">
                                 🤖</div>
                         </div>
-                        <div>
+                        <div class="flex-grow">
                             <h3 class="font-bold text-emerald-800 text-sm mb-1">AI 戰情分析</h3>
-                            <p class="text-slate-700 leading-relaxed">{{ result.summary }}</p>
+                            <p class="text-slate-700 leading-relaxed whitespace-pre-wrap typing-cursor">{{
+                                displayedSummary }}</p>
                         </div>
                     </div>
 
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div v-if="resultData"
+                        class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                         <div class="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
                             <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">查詢結果明細</h4>
                             <span class="text-xs text-slate-400">Generated by Gemini 1.5</span>
                         </div>
 
-                        <div v-if="result.data && result.data.length > 0" class="overflow-x-auto">
+                        <div v-if="resultData.length > 0" class="overflow-x-auto">
                             <table class="min-w-full text-sm text-left text-slate-500">
                                 <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
                                     <tr>
-                                        <th v-for="(value, key) in result.data[0]" :key="key"
+                                        <th v-for="(value, key) in resultData[0]" :key="key"
                                             class="px-6 py-3 font-semibold">{{ key }}</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
-                                    <tr v-for="(row, index) in result.data" :key="index"
+                                    <tr v-for="(row, index) in resultData" :key="index"
                                         class="bg-white hover:bg-slate-50 transition">
                                         <td v-for="(value, key) in row" :key="key" class="px-6 py-4 whitespace-nowrap">
                                             {{ value }}</td>
@@ -214,7 +229,7 @@
                                 <span class="text-xs text-slate-400 font-mono">SQL Query</span>
                             </div>
                             <code class="block font-mono text-xs text-green-400 break-all">
-                                > {{ result.sql }}
+                                > {{ resultSql }}
                             </code>
                         </div>
                     </div>
@@ -233,8 +248,15 @@
                 return {
                     question: '列出大甲廠產量低於標準的批號',
                     loading: false,
-                    result: null,
-                    // 預設問題列表，方便 Demo
+                    hasResult: false,
+                    resultSql: '',
+                    resultData: null,
+
+                    // 核心邏輯變數
+                    displayedSummary: '', // 畫面上看到的字
+                    textQueue: [],        // 待顯示的字串緩衝區
+                    isTyping: false,
+
                     sampleQueries: [
                         "列出大甲廠產量低於標準的批號",
                         "二林廠的總產量是多少？",
@@ -243,31 +265,74 @@
                     ]
                 }
             },
+            mounted() {
+                // 啟動一個永久的計時器，每 30ms 檢查 Queue 裡有沒有字要吐出來
+                // 這樣可以把不穩定的網路流 (Network Stream) 轉成 穩定的顯示流 (Display Stream)
+                setInterval(() => {
+                    if (this.textQueue.length > 0) {
+                        const char = this.textQueue.shift(); // 拿最前面一個字
+                        this.displayedSummary += char;
+                    }
+                }, 30); // 30ms = 打字速度，越小越快
+            },
             methods: {
-                // 點擊快速按鈕時，自動填入問題
                 setQuestion(q) {
                     this.question = q;
-                    // 可選：點擊後是否直接送出？如果想更順，可以把下面這行註解打開
-                    // this.askAI(); 
                 },
                 async askAI() {
                     if (!this.question) return;
                     this.loading = true;
-                    this.result = null;
+                    this.hasResult = true;
+                    this.resultSql = '';
+                    this.resultData = null;
+
+                    // 清空之前的狀態
+                    this.displayedSummary = '';
+                    this.textQueue = [];
+
                     try {
-                        const res = await fetch('/ask', {
+                        const response = await fetch('/ask', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            // 注意：這裡假設後端還是只收 question，如果你有加 model/api_key，記得補上
                             body: JSON.stringify({ question: this.question })
                         });
-                        const data = await res.json();
 
-                        if (!res.ok) throw new Error(data.error || '請求失敗');
+                        const reader = response.body.getReader();
+                        const decoder = new TextDecoder();
 
-                        this.result = data;
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+
+                            const chunk = decoder.decode(value, { stream: true });
+                            const lines = chunk.split('\n'); // 簡單處理 SSE 格式
+
+                            for (const line of lines) {
+                                if (line.startsWith('data: ')) {
+                                    try {
+                                        const jsonStr = line.substring(6);
+                                        const event = JSON.parse(jsonStr);
+
+                                        if (event.type === 'init') {
+                                            // SQL 和表格直接顯示
+                                            this.resultSql = event.sql;
+                                            this.resultData = event.data;
+                                        } else if (event.type === 'chunk') {
+                                            // 關鍵修改：不要直接顯示，而是丟進 Queue
+                                            // 將接收到的字串拆成字元陣列丟進去
+                                            const chars = event.content.split('');
+                                            this.textQueue.push(...chars);
+                                        } else if (event.type === 'error') {
+                                            this.textQueue.push(...('錯誤：' + event.content).split(''));
+                                        }
+                                    } catch (e) {
+                                        // 忽略 JSON 解析錯誤 (可能是封包被切斷)
+                                    }
+                                }
+                            }
+                        }
                     } catch (error) {
-                        alert('發生錯誤: ' + error.message);
+                        alert('連線錯誤: ' + error.message);
                     } finally {
                         this.loading = false;
                     }
