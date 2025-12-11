@@ -19,7 +19,7 @@ if api_key:
     genai.configure(api_key=api_key)
 
 # 使用 1.5-flash
-model = genai.GenerativeModel("gemini-2.5-flash")
+model = genai.GenerativeModel("gemini-2.5-flash-lite")
 
 
 def query_db(query):
