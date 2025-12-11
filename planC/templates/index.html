@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <title>工廠維修知識庫 (RAG)</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+
+<body class="bg-gray-50 h-screen flex flex-col items-center p-10">
+
+    {% raw %}
+    <div id="app" class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <div class="bg-white p-6 rounded-lg shadow md:col-span-1 h-fit">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">📂 知識庫管理</h2>
+            <p class="text-sm text-gray-600 mb-4">上傳維修手冊或 SOP (PDF)，AI 就能學會裡面的內容。</p>
+
+            <input type="file" ref="fileInput" accept=".pdf"
+                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 mb-4" />
+
+            <button @click="uploadFile" :disabled="uploading"
+                class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none disabled:opacity-50">
+                {{ uploading ? '正在學習中...' : '上傳並建立索引' }}
+            </button>
+            <p v-if="uploadMsg" class="mt-2 text-sm text-green-600 font-bold">{{ uploadMsg }}</p>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow md:col-span-2 flex flex-col h-[600px]">
+            <h2 class="text-xl font-bold mb-4 text-blue-600">🤖 維修小幫手</h2>
+
+            <div class="flex-1 overflow-y-auto mb-4 border p-4 rounded bg-gray-50 space-y-4">
+                <div v-if="chatHistory.length === 0" class="text-center text-gray-400 mt-10">
+                    請先在左側上傳手冊，然後問我問題。<br>例如：「E04 故障碼怎麼排解？」
+                </div>
+
+                <div v-for="(chat, index) in chatHistory" :key="index" class="flex flex-col">
+                    <div class="self-end bg-blue-100 text-blue-900 p-3 rounded-lg rounded-tr-none mb-2 max-w-[80%]">
+                        {{ chat.user }}
+                    </div>
+                    <div
+                        class="self-start bg-white border border-gray-200 p-3 rounded-lg rounded-tl-none max-w-[90%] shadow-sm">
+                        <div v-html="renderMarkdown(chat.ai)"></div>
+                        <div class="mt-2 text-xs text-gray-400 border-t pt-1">
+                            參考來源: <span v-for="src in chat.sources" class="mr-2 bg-gray-200 px-1 rounded">{{ src.source
+                                }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <input v-model="question" @keyup.enter="askAI" type="text"
+                    class="flex-1 shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    placeholder="輸入你的問題...">
+                <button @click="askAI" :disabled="asking"
+                    class="bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-6 rounded focus:outline-none disabled:opacity-50">
+                    {{ asking ? '搜尋中...' : '送出' }}
+                </button>
+            </div>
+        </div>
+
+    </div>
+    {% endraw %}
+
+    <script>
+        const { createApp } = Vue
+
+        createApp({
+            data() {
+                return {
+                    question: '',
+                    chatHistory: [],
+                    asking: false,
+                    uploading: false,
+                    uploadMsg: ''
+                }
+            },
+            methods: {
+                renderMarkdown(text) {
+                    return marked.parse(text);
+                },
+                async uploadFile() {
+                    const file = this.$refs.fileInput.files[0];
+                    if (!file) return alert("請先選擇檔案");
+
+                    this.uploading = true;
+                    this.uploadMsg = '';
+
+                    const formData = new FormData();
+                    formData.append("file", file);
+
+                    try {
+                        const res = await fetch('/upload_pdf', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const data = await res.json();
+                        this.uploadMsg = data.message || "上傳成功";
+                    } catch (e) {
+                        alert("上傳失敗: " + e);
+                    } finally {
+                        this.uploading = false;
+                    }
+                },
+                async askAI() {
+                    if (!this.question.trim()) return;
+
+                    const userQ = this.question;
+                    this.question = ''; // 清空輸入框
+                    this.asking = true;
+
+                    try {
+                        const res = await fetch('/ask_rag', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ question: userQ })
+                        });
+                        const data = await res.json();
+
+                        this.chatHistory.push({
+                            user: userQ,
+                            ai: data.answer,
+                            sources: data.sources
+                        });
+
+                        // 捲動到底部 (簡單實作)
+                        setTimeout(() => {
+                            const container = document.querySelector('.overflow-y-auto');
+                            if (container) container.scrollTop = container.scrollHeight;
+                        }, 100);
+
+                    } catch (e) {
+                        alert("發生錯誤: " + e);
+                    } finally {
+                        this.asking = false;
+                    }
+                }
+            }
+        }).mount('#app')
+    </script>
+</body>
+
+</html>
